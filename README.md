@@ -1,163 +1,84 @@
-# Homework 1: 10-class Classification in Machine Learning 🚀
+# marr-ml-projects
 
-- **Master:** Robotics and Artificial Intelligence
-- **University:** La Sapienza University of Rome  
-- **Course:** Machine Learning
-- **Student:** Edoardo Caciolo (Matricola: 1793918)  
+> Two graduate machine learning coursework projects: a tabular multiclass classifier comparison and a Convolutional Neural Network (CNN) controller for a simulated racing car.
 
----
+## Overview
 
-## Introduction
+This repository holds two assignments completed for the Machine Learning course in the Robotics and Artificial Intelligence master's program at Sapienza University of Rome. The first project trains and compares six supervised classifiers on two synthetic 10-class datasets and profiles their accuracy against compute cost. The second project trains CNNs on labeled game frames to drive a car in the Gymnasium `CarRacing-v2` environment and evaluates them by both classification metrics and in-simulation reward. The work is academic: each project ships its source code, a written report, and result artifacts.
 
-This project aims to solve a multiclass classification problem (10 classes) on two different datasets, one with 100 features and the other with 1000 features.  
-The goal is to analyze and compare various Machine Learning models, evaluating their performance in terms of accuracy and computational efficiency. 🔍
+## Features
 
-## Models Used
+- **Six-classifier benchmark (Homework 1):** trains Logistic Regression, Decision Tree, Random Forest, Support Vector Machine (SVM), K-Nearest Neighbors (KNN), and XGBoost on two datasets (100 and 1000 features) with `scikit-learn` and `xgboost`.
+- **Cross-validation comparison:** runs each model with and without 5-fold cross-validation and reports Accuracy, Precision, Recall, F1, and ROC/AUC.
+- **Compute profiling:** measures wall-clock time and system resource usage (via `psutil`) alongside model quality, so model selection weighs accuracy against runtime.
+- **Hyperparameter tuning:** uses `GridSearchCV` for per-model tuning and `StandardScaler` for feature standardization.
+- **Two CNN architectures (Homework 2):** implements `model_cnn1` (stacked Conv/MaxPool blocks with dropout) and `model_cnn2` (5x5 filters with Batch Normalization) in Keras.
+- **Class-imbalance handling:** loads images from per-class folders and optionally oversamples minority classes (`sklearn.utils.resample`) under a single `ENABLE_OVERSAMPLING` toggle, comparing balanced and unbalanced training.
+- **Grid search over training settings:** sweeps batch size, learning rate, and epoch count, saving every trained model to disk as a Keras `.h5` file named by its hyperparameters.
+- **Closed-loop evaluation:** runs saved models against `CarRacing-v2`, mapping each 96x96 frame to a discrete action and summing the episode's total reward.
+- **Offline metrics:** scores saved models on a held-out test set with confusion matrices (rendered via `seaborn`) and macro-averaged classification metrics.
 
-- **Logistic Regression** 📈
-- **Decision Tree** 🌳
-- **Random Forest** 🌲
-- **Support Vector Machine (SVM)** 🔒
-- **K-Nearest Neighbors (KNN)** 🤝
-- **XGBoost** ⚡
+## Architecture
 
-_The analysis was performed using both with and without Cross Validation (CV, k=5)._
+The two projects are independent and share no code; each is a small training-and-evaluation pipeline.
 
-## Methodology
+**Homework 1 — tabular classification**
+1. `load_data.py` reads a CSV whose first column holds bracketed feature-vector strings, parses them into a NumPy feature matrix, and returns labels when present.
+2. The notebook standardizes features with `StandardScaler` and splits data into training and evaluation sets.
+3. Each of the six models trains both directly and under 5-fold cross-validation, with `GridSearchCV` tuning where time permits.
+4. Quality metrics and resource usage are recorded per model; the final pick balances accuracy against cost (SVM for the 100-feature dataset, Random Forest for the 1000-feature dataset).
 
-- **Preprocessing:** Data standardization using `StandardScaler`.
-- **Optimization:** Hyperparameter tuning with `GridSearchCV` (except for Logistic Regression due to high computation time).
-- **Data Splitting:** The dataset was divided into training and evaluation sets in a 5:1 ratio.
-- **Evaluation:** Metrics such as Accuracy, Precision, Recall, and F1 Score were computed, along with an analysis of computational resources (execution time, CPU, RAM). ⏱️💻
+**Homework 2 — CNN driving controller**
+1. `ML_Homework2_SourceCode_1793918.py` loads labeled 96x96 RGB frames from per-class subfolders, optionally oversamples to balance classes, and normalizes pixels to the 0–1 range.
+2. It grid-searches batch size, learning rate, and epochs over both CNN architectures, compiling with the Adam optimizer and sparse categorical cross-entropy, and saves each result as an `.h5` model.
+3. `ML_Homework2_evaluation_metrics_1793918.py` reloads the saved models and scores them on the test set, producing accuracy/precision/recall/F1 and confusion matrices.
+4. `ML_Homework2_play_policy_template_1793918.py` loads a chosen model and runs it in the `CarRacing-v2` Gymnasium environment, predicting one discrete action per frame and reporting total episode reward and runtime.
 
-## Results
+## Tech Stack
 
-- **Dataset 1 (100 features):**
-  - The SVM model without CV showed excellent performance (accuracy ≃ 98.69%) with reasonable computation times.
-  - Using CV slightly improved accuracy (accuracy ≃ 98.86%) but increased resource usage.
-  
-- **Dataset 2 (1000 features):**
-  - Overall performance is slightly lower compared to Dataset 1.
-  - The Random Forest without CV was chosen as the best compromise between accuracy and execution time.
+| Category | Details |
+| --- | --- |
+| Language | Python (Jupyter Notebook for Homework 1) |
+| ML / DL | scikit-learn, XGBoost, TensorFlow / Keras |
+| RL environment | Gymnasium (`CarRacing-v2`, Box2D), pygame |
+| Data / numerics | NumPy, pandas |
+| Visualization | Matplotlib, seaborn |
+| Profiling | psutil |
 
-## Conclusions
+## Getting Started
 
-The analysis demonstrated that optimal model selection must balance accuracy, computation time, and resource usage.  
-The comparison shows that there is no one-size-fits-all solution; the final choice was based on a compromise considering the specific characteristics of each dataset.  
-For Dataset 1, SVM without CV was selected, while for Dataset 2, Random Forest without CV was chosen. ✅
+Prerequisites: Python 3 with `scikit-learn`, `xgboost`, `tensorflow`, `numpy`, `pandas`, `matplotlib`, `seaborn`, and `psutil`. Homework 2's simulation also needs `gymnasium[box2d]` and `pygame`.
 
-## Attached Files
+The repository has no dependency manifest or central entry point; each file is run on its own. Note that the input datasets, training/test image folders, and trained `.h5` models are not committed, so the scripts run only after those assets are supplied locally.
 
-- **Report:** `ML_Homework1_Report_1793918.pdf` 📄
-- **Source Code:** `ML_Homework1_SourceCode_1793918.ipynb` 📦
-- **Predictions:**
-  - Dataset 1: [d1_1793918.csv](./d1_1793918.csv)
-  - Dataset 2: [d2_1793918.csv](./d2_1793918.csv)
+```bash
+# Homework 1: open and run the notebook
+jupyter notebook "Homework 1/ML_Homework1_SourceCode_1793918.ipynb"
 
----
+# Homework 2: train CNNs, then evaluate or simulate
+python "Homework 2/ML_Homework2_SourceCode_1793918.py"
+python "Homework 2/ML_Homework2_evaluation_metrics_1793918.py"
+python "Homework 2/ML_Homework2_play_policy_template_1793918.py"
+```
 
-## Appendix
+## Project Structure
 
-The repository also includes the complete code used for the analysis, which comprises:
+```
+Homework 1/
+  ML_Homework1_SourceCode_1793918.ipynb   # six-classifier training and comparison
+  load_data.py                            # CSV feature-vector parser
+  ML_Homework1_Report_1793918.pdf         # written report
+  ML_HMW1.pptx                            # slides
+Homework 2/
+  ML_Homework2_SourceCode_1793918.py            # CNN definitions + grid-search training
+  ML_Homework2_evaluation_metrics_1793918.py    # offline metrics + confusion matrices
+  ML_Homework2_play_policy_template_1793918.py  # CarRacing-v2 simulation runner
+  ML_Homework2_Report_1793918.pdf               # written report
+  ML_Homework_2_MER_1793918.xlsx                # metrics spreadsheet
+  *.mp4                                          # simulation video
+README.md
+```
 
-- `load_data.py`: Functions for loading data.
+## Status
 
----
-
-*This project was completed as part of Homework 1 for the Machine Learning course in the Robotics and Artificial Intelligence Master program at Sapienza University of Rome.*
-
-
-
-<br><br><br>
-
-
-# Homework 2: CNN-based Control for Virtual Car Racing 🚗🏁
-
-- **Master:** Robotics and Artificial Intelligence
-- **University:** La Sapienza University of Rome  
-- **Course:** Machine Learning
-- **Student:** Edoardo Caciolo (Matricola: 1793918)  
- 
----
-
-## Introduction
-
-This project addresses the control problem for a racing car in a virtual Gymnasium environment using Convolutional Neural Networks (CNNs). The objective is to design, train, and evaluate CNN models that enable the car to navigate a track by processing pre-classified images and mapping them to discrete driving actions. 🎯
-
-## Project Scope
-
-- **Control Task:** Develop a control system for a virtual racing car with discrete actions (e.g., steer left/right, accelerate, brake).
-- **Data:** Train the models on a dataset of 6,369 pre-classified images, each labeled with a specific driving action.
-- **Models:** Two CNN architectures (CNN1 and CNN2) were implemented and compared.
-- **Evaluation:** Models are evaluated using classic metrics (Accuracy, Precision, Recall, F1 Score, Average Evaluation Metrics) and the Total Reward (TR) obtained during simulation.
-
-## Models Used
-
-- **CNN1 Model** 🧠  
-  - Features multiple convolutional layers followed by pooling, a flatten layer, dense layers, and dropout.
-- **CNN2 Model** 🧠  
-  - Incorporates larger filter sizes and Batch Normalization to stabilize and accelerate training.
-
-Both models were trained under various hyperparameter settings using Grid Search, testing parameters such as Batch Size, Learning Rate, and the number of Epochs.
-
-## Methodology
-
-- **Preprocessing:**  
-  - Image pixel values are normalized (dividing by 255.0) to scale them from 0 to 1.
-  
-- **Hyperparameter Tuning:**  
-  - Grid Search was used to explore different combinations of Batch Size, Learning Rate, and Epochs.
-  
-- **Oversampling Analysis:**  
-  - The dataset was initially imbalanced. Experiments with oversampling were conducted; however, the final model was trained on unbalanced data to better reflect real-world conditions.
-  
-- **Evaluation Metrics:**  
-  - Accuracy, Precision, Recall, F1 Score, and Average Evaluation Metrics (AEM) were computed.
-  - **Total Reward (TR)** was also recorded during simulation to assess real-time performance on the virtual track.
-
-## Results & Model Choice
-
-- **Training Outcomes:**  
-  - Various models were generated, and performance was compared using evaluation metrics and simulation results.
-  - The final model selected is **m 200013210.h5**, which demonstrated excellent simulation performance, achieving very good speed control, cornering grip, and trajectory recovery. ✅
-
-- **Simulation Observations:**  
-  - The chosen model maintained steady control, with only minor deviations that were quickly corrected.
-  - Comparative tests highlighted that oversampling degraded learning in the simulation environment, confirming the decision to use the unbalanced training data.
-
-## Future Developments
-
-Potential future improvements include:
-- **Integrating Deep Q-Networks (DQN)** to enhance decision-making in dynamic environments.
-- **Combining with Model Predictive Control (MPC)** for optimized trajectory planning.
-- A **hybrid approach** that leverages the strengths of CNNs for image processing, DQNs for strategic decision-making, and MPC for precise control actions could further enhance performance in both virtual and physical racing scenarios.
-
-## Attached Files
-
-- **Report:** `ML_Homework2_Report_1793918.pdf` 📄
-- **Source Code Files:**  
-  - `ML_Homework2_SourceCode_1793918.py` (CNN models generation)  
-  - `ML_Homework2_evaluation_metrics_1793918.py` (Evaluation of the models)  
-  - `ML_Homework2_play_policy_template_1793918.py` (Simulation code for the virtual environment)  
-- **Model Folders:**  
-  - *models Oversampling OFF* (39 CNN models)  
-  - *models Oversampling ON* (54 CNN models)  
-- **Evaluation Spreadsheets:** MER ML Homework 2 1793918.xlsx (contains detailed metrics and confusion matrices) 📊
-- **Simulation Video:** ML Homework 2 1793918 m 200013210 simulation video.mp4 🎞️
-- **GitHub Repository:**  
-
----
-
-## Appendix
-
-The repository also contains the complete source code used for model training, evaluation, and simulation, including:
-- `load_img` and image processing scripts.
-- CNN model definitions (see Appendix A in the report for details).
-- Detailed evaluation tables and simulation results.
-
----
-
-*This project was developed as part of Homework 2 for the Machine Learning course in the Robotics and Artificial Intelligence Master's program at Sapienza University of Rome. Enjoy the ride! 🚀*
-
-
-
+Academic coursework (completed assignments), not maintained as a product. No license file is present.
